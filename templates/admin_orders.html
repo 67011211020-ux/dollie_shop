@@ -1,0 +1,84 @@
+{{define "admin_orders.html"}}
+{{template "header" .}}
+<div class="admin-orders-page"><a href="/admin">← แผงผู้ดูแล</a>
+  <header class="admin-orders-heading">
+    <h1>📋 จัดการออเดอร์</h1>
+    <p>ตรวจสอบคำสั่งซื้อและอัปเดตสถานะการจัดส่ง</p>
+  </header>
+  {{range .Orders}}
+  <article class="admin-order-card">
+    <div class="admin-order-top">
+      <div>
+        <h2>คำสั่งซื้อ #{{.ID}}</h2>
+        <p class="admin-order-meta">♙ {{.Customer}} · {{.CreatedAt}}</p>
+      </div>
+      <span class="my-order-status {{if eq .Status "pending"}}status-pending{{else if eq .Status "confirmed"}}status-confirmed{{else if eq .Status "completed"}}status-completed{{else if eq .Status "cancelled"}}status-cancelled{{else}}status-other{{end}}">
+        {{if eq .Status "pending"}}◷ รอดำเนินการ{{else if eq .Status "confirmed"}}✓ ยืนยันแล้ว{{else if eq .Status "completed"}}✓ เสร็จสิ้น{{else if eq .Status "cancelled"}}✕ ยกเลิกแล้ว{{else}}{{.Status}}{{end}}
+      </span>
+    </div>
+    <div class="admin-order-items">
+      {{range .Items}}
+      <div class="admin-order-item">
+        <div class="admin-order-thumb">{{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Name}}" loading="lazy">{{else}}🧸{{end}}</div>
+        <div class="admin-order-item-info">
+          <strong>{{.Name}}</strong>{{if or .Color .Size}}<span>สี: {{.Color}} · ขนาด: {{.Size}}</span>{{end}}
+          
+          <span>จำนวน {{.Quantity}} ชิ้น</span>
+          <b>฿{{money .SubtotalCents}}</b>
+        </div>
+      </div>
+      {{end}}
+    </div>
+    {{if .ShippingAddress}}
+    <section class="admin-order-shipping">
+      <h3>⌾ ข้อมูลจัดส่ง</h3>
+      <p><strong>ผู้รับ:</strong> {{.ReceiverName}}</p>
+      <p><strong>ที่อยู่:</strong> {{.ShippingAddress}}</p>
+      <p><strong>โทรศัพท์:</strong> {{.ReceiverPhone}}</p>
+      {{if .OrderNote}}<p><strong>หมายเหตุ:</strong> {{.OrderNote}}</p>{{end}}
+    </section>
+    {{else}}<p class="admin-order-old">คำสั่งซื้อเก่า: ไม่มีข้อมูลที่อยู่จัดส่ง</p>{{end}}
+    <section class="admin-order-payment compact-payment">
+      <div class="compact-payment-head">
+        <strong>💳 การชำระเงิน · {{if eq .PaymentMethod "promptpay"}}พร้อมเพย์{{else if eq .PaymentMethod "mobile_banking"}}โมบายแบงกิ้ง{{else if eq .PaymentMethod "cod"}}เก็บเงินปลายทาง{{else}}ไม่ระบุ{{end}}</strong>
+        <span class="compact-payment-badge {{if eq .PaymentStatus "verified"}}is-verified{{else if eq .PaymentStatus "rejected"}}is-rejected{{else if eq .PaymentStatus "submitted"}}is-submitted{{end}}">{{if eq .PaymentStatus "pending"}}⏳ รอชำระเงิน{{else if eq .PaymentStatus "submitted"}}🧾 รอตรวจสอบ{{else if eq .PaymentStatus "verified"}}✓ ชำระเงินแล้ว{{else if eq .PaymentStatus "rejected"}}✕ สลิปไม่ผ่าน{{else}}ยังไม่มีข้อมูล{{end}}</span>
+      </div>
+      {{if ne .PaymentMethod ""}}
+      <form method="post" action="/admin/payments/status" class="admin-order-payment-form compact-control-row">
+        <input type="hidden" name="csrf" value="{{$.CSRF}}">
+        <input type="hidden" name="order_id" value="{{.ID}}">
+        <input type="hidden" name="return_to" value="orders">
+        {{if .HasReceipt}}<a href="/payment/receipt/view?order_id={{.ID}}" target="_blank" rel="noopener" class="compact-receipt-link">🧾 ดูสลิป</a>{{else if eq .PaymentMethod "cod"}}<span class="compact-no-receipt">เก็บเงินปลายทาง</span>{{else}}<span class="compact-no-receipt">ยังไม่มีสลิป</span>{{end}}
+        <label for="payment-status-{{.ID}}" class="compact-select-wrap"><span class="sr-only">เปลี่ยนสถานะการชำระเงิน</span>
+          <select id="payment-status-{{.ID}}" name="status" data-original="{{.PaymentStatus}}" aria-label="สถานะการชำระเงิน" required>
+            <option value="pending" {{if eq .PaymentStatus "pending"}}selected{{end}}>⏳ รอชำระเงิน</option>
+            <option value="submitted" {{if eq .PaymentStatus "submitted"}}selected{{end}}>🧾 ส่งสลิปแล้ว — รอตรวจสอบ</option>
+            <option value="verified" {{if eq .PaymentStatus "verified"}}selected{{end}}>✓ ยืนยันการชำระเงินแล้ว</option>
+            <option value="rejected" {{if eq .PaymentStatus "rejected"}}selected{{end}}>✕ สลิปไม่ผ่านการตรวจสอบ</option>
+          </select>
+        </label>
+        <button type="submit" class="btn compact-save" disabled>บันทึก</button>
+      </form>
+      {{end}}
+    </section>
+    <form class="admin-order-status-form compact-order-status" method="post" action="/admin/order/status">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}">
+      <input type="hidden" name="id" value="{{.ID}}">
+      <label for="order-status-{{.ID}}">📦 สถานะคำสั่งซื้อ</label>
+      <select id="order-status-{{.ID}}" name="status" data-original="{{.Status}}" required>
+        <option value="pending"{{if eq .Status "pending"}} selected{{end}}>⏳ รอดำเนินการ</option>
+        <option value="confirmed"{{if eq .Status "confirmed"}} selected{{end}}>📦 ยืนยันแล้ว</option>
+        <option value="completed"{{if eq .Status "completed"}} selected{{end}}>✓ เสร็จสิ้น</option>
+        <option value="cancelled"{{if eq .Status "cancelled"}} selected{{end}}>✕ ยกเลิกแล้ว</option>
+      </select>
+      <button class="btn compact-save" type="submit" disabled>บันทึก</button>
+    </form>
+    <div class="admin-order-total"><strong>ยอดรวมทั้งหมด</strong><strong>฿{{money .TotalCents}}</strong></div>
+  </article>
+  {{else}}
+  <div class="my-orders-empty">🧸 ยังไม่มีคำสั่งซื้อ</div>
+  {{end}}
+</div>
+<script src="/static/admin-orders.js" defer></script>
+{{template "footer" .}}
+{{end}}

@@ -1,0 +1,18 @@
+{{define "admin.html"}}{{template "header" .}}
+<div class="admin-hub dashboard"><a href="/admin">← แผงผู้ดูแล</a><h1>🧸 ภาพรวมร้านค้า</h1><p>สรุปข้อมูลสำคัญของ Dollie Shop</p>
+<div class="dash-stats">
+<a href="/admin/orders" class="dash-stat"><small>🛍️ คำสั่งซื้อทั้งหมด</small><strong>{{.Dashboard.TotalOrders}}</strong><span>รายการ</span></a>
+<a href="/admin/orders" class="dash-stat"><small>⏳ รอดำเนินการ</small><strong>{{.Dashboard.PendingOrders}}</strong><span>คำสั่งซื้อ</span></a>
+<a href="/admin/products" class="dash-stat"><small>📦 สินค้าทั้งหมด</small><strong>{{.Dashboard.TotalProducts}}</strong><span>รายการ</span></a>
+<div class="dash-stat"><small>💰 ยอดขายรวม</small><strong>฿{{money .Dashboard.CompletedSalesCents}}</strong><span>คำสั่งซื้อที่เสร็จสิ้น</span></div>
+</div>
+<section class="dash-panel"><div class="dash-panel-head"><h2>📦 คำสั่งซื้อล่าสุด</h2><a href="/admin/orders">ดูทั้งหมด</a></div>
+{{range .Dashboard.RecentOrders}}<a class="dash-order" href="/admin/orders"><span><b>คำสั่งซื้อ #{{.ID}}</b><small>{{.Customer}} · {{if eq .Status "pending"}}รอดำเนินการ{{else if eq .Status "confirmed"}}ยืนยันแล้ว{{else if eq .Status "completed"}}เสร็จสิ้น{{else if eq .Status "cancelled"}}ยกเลิกแล้ว{{else}}{{.Status}}{{end}}</small></span><b>฿{{money .TotalCents}}</b></a>{{else}}<p>ยังไม่มีคำสั่งซื้อ</p>{{end}}
+</section>
+<section class="dash-panel"><h2>🔔 สิ่งที่ต้องจัดการ</h2>
+<a class="dash-order" href="/admin/payments"><span>🧾 สลิปรอตรวจสอบ</span><b>{{.Dashboard.PendingPayments}} รายการ</b></a>
+<a class="dash-order" href="/admin/messages"><span>💬 ข้อความที่ยังไม่ได้ตอบ</span><b>{{.Dashboard.UnansweredMessages}} ข้อความ</b></a>
+<a class="dash-order" href="/admin/products"><span>⚠️ สินค้าใกล้หมด (ไม่เกิน 5 ชิ้น)</span><b>{{.Dashboard.LowStock}} รายการ</b></a>
+</section>
+
+</div>{{template "footer" .}}{{end}}

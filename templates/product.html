@@ -1,0 +1,40 @@
+{{define "product.html"}}{{template "header" .}}<a href="/">← กลับไปหน้าร้าน</a><div class="detail"><div class="product-image large">{{if .Product.ImageURL}}<img src="{{.Product.ImageURL}}" alt="{{.Product.Name}}">{{else}}🧸{{end}}</div><div><h1>{{.Product.Name}}</h1><p>{{.Product.Description}}</p><h2>฿{{printf "%.2f" .Product.Price}}</h2><p>📦 คงเหลือ {{.Product.Stock}} ชิ้น</p>{{if and .User (gt .Product.Stock 0)}}<form method="post" action="/cart/add"><input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="product_id" value="{{.Product.ID}}"><div class="dollie-variant-group"><div class="dollie-variant-heading">เลือกสีตุ๊กตา</div><div class="dollie-variant-options">{{range $i, $color := colors .Product.ID}}<label class="dollie-variant-option"><input type="radio" name="color" value="{{$color}}" required {{if eq $i 0}}checked{{end}}><span>{{$color}}</span></label>{{end}}</div></div><div class="dollie-variant-group"><div class="dollie-variant-heading">เลือกขนาด</div><div class="dollie-variant-options">{{range $i, $size := sizes}}<label class="dollie-variant-option"><input type="radio" name="size" value="{{$size}}" required {{if eq $i 0}}checked{{end}}><span>{{$size}}</span></label>{{end}}</div></div><label class="product-quantity">จำนวน <input type="number" name="quantity" min="1" max="99" value="1" required></label><button class="btn">🛒 เพิ่มลงตะกร้า</button></form>{{else}}{{if eq .Product.Stock 0}}<p>สินค้าหมดชั่วคราว</p>{{else}}<a href="/login">เข้าสู่ระบบเพื่อเพิ่มลงตะกร้า</a>{{end}}{{end}}</div></div><section class="reviews" id="reviews">
+{{if and .User .CanReview}}
+<div class="form-card review-form"><h2>⭐ รีวิวสินค้าของคุณ</h2><p>คำสั่งซื้อของคุณได้รับการยืนยันแล้ว คุณสามารถให้คะแนนและเขียนรีวิวได้ 1 ครั้งต่อคำสั่งซื้อ</p>
+<form method="post" action="/review/save"><input type="hidden" name="csrf" value="{{.CSRF}}"><input type="hidden" name="product_id" value="{{.Product.ID}}"><label>ให้คะแนนสินค้า<select name="rating" required>{{range $n := seqRatings}}<option value="{{$n}}">{{stars $n}} ({{$n}} ดาว)</option>{{end}}</select></label><label>ความคิดเห็น<textarea name="comment" minlength="3" maxlength="2000" required placeholder="เล่าความประทับใจของคุณ..."></textarea></label><button class="btn">ส่งรีวิวสินค้า</button></form></div>
+{{end}}
+<div class="review-section-heading"><div><h2>💗 รีวิวจากลูกค้า</h2><p>ขอบคุณทุกความคิดเห็นที่แบ่งปันให้ร้านของเรา ♡</p></div><span class="review-total">💬 {{len .Reviews}} รีวิว</span></div>
+<div class="review-list">
+{{range .Reviews}}{{$review := .}}
+<article class="review review-pretty">
+  <div class="review-top">
+    <div class="review-avatar" aria-hidden="true">🐰</div>
+    <div class="review-person"><strong>{{.Author}}</strong><div class="review-stars" aria-label="คะแนน {{.Rating}} จาก 5">{{stars .Rating}} <span>({{.Rating}}/5)</span></div></div>
+    {{if .Owned}}<span class="review-owner-label">♡ รีวิวของคุณ</span>{{end}}
+  </div>
+  <p class="review-comment">{{.Comment}}</p>
+  {{if .Owned}}
+  <div class="review-actions">
+    <details class="review-edit">
+      <summary>✏️ แก้ไขรีวิวของฉัน</summary>
+      <form method="post" action="/review/save" class="review-edit-form">
+        <input type="hidden" name="csrf" value="{{$.CSRF}}">
+        <input type="hidden" name="id" value="{{.ID}}">
+        <input type="hidden" name="product_id" value="{{.ProductID}}">
+        <label>คะแนน<select name="rating" required>{{range $n := seqRatings}}<option value="{{$n}}" {{if eq $n $review.Rating}}selected{{end}}>{{$n}} ดาว</option>{{end}}</select></label>
+        <label>ความคิดเห็น<textarea name="comment" minlength="3" maxlength="2000" required>{{.Comment}}</textarea></label>
+        <button class="btn" type="submit">💗 บันทึกการแก้ไข</button>
+      </form>
+    </details>
+    <form method="post" action="/review/delete" class="review-delete" onsubmit="return confirm('ยืนยันการลบรีวิว? การลบไม่คืนสิทธิ์รีวิว')">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}">
+      <input type="hidden" name="id" value="{{.ID}}">
+      <input type="hidden" name="product_id" value="{{.ProductID}}">
+      <button class="review-delete-btn" type="submit">🗑️ ลบรีวิว</button>
+    </form>
+  </div>
+  {{end}}
+</article>
+{{else}}<div class="review-empty">💌 ยังไม่มีรีวิวสินค้านี้ มาเป็นคนแรกที่แบ่งปันความประทับใจกันนะ</div>{{end}}
+</div>
+</section>{{template "footer" .}}{{end}}

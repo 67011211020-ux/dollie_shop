@@ -1,0 +1,49 @@
+CREATE DATABASE IF NOT EXISTS dollie_shop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE dollie_shop;
+CREATE TABLE IF NOT EXISTS users (
+ id BIGINT AUTO_INCREMENT PRIMARY KEY,
+ name VARCHAR(100) NOT NULL,
+ email VARCHAR(190) NOT NULL UNIQUE,
+ password_hash VARCHAR(255) NOT NULL,
+ role ENUM('user','admin') NOT NULL DEFAULT 'user',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS products (
+ id BIGINT AUTO_INCREMENT PRIMARY KEY,
+ name VARCHAR(120) NOT NULL,
+ description TEXT NOT NULL,
+ price DECIMAL(10,2) NOT NULL,
+ image_url VARCHAR(500) NOT NULL DEFAULT '',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS reviews (
+ id BIGINT AUTO_INCREMENT PRIMARY KEY,
+ user_id BIGINT NOT NULL,
+ product_id BIGINT NOT NULL,
+ rating TINYINT NOT NULL,
+ comment TEXT NOT NULL,
+ deleted_at DATETIME NULL DEFAULT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+ FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+ CONSTRAINT rating_range CHECK (rating BETWEEN 1 AND 5)
+);
+CREATE TABLE IF NOT EXISTS inquiries (
+ id BIGINT AUTO_INCREMENT PRIMARY KEY,
+ user_id BIGINT NOT NULL,
+ subject VARCHAR(150) NOT NULL,
+ message TEXT NOT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS sessions (
+ token_hash CHAR(64) PRIMARY KEY,
+ user_id BIGINT NOT NULL,
+ expires_at DATETIME NOT NULL,
+ FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+ INDEX (expires_at)
+);
+INSERT INTO products (name, description, price, image_url)
+SELECT 'น้องหมีครีม', 'ตุ๊กตาหมีนุ่มฟูสำหรับกอด', 359.00, '' WHERE NOT EXISTS (SELECT 1 FROM products);
+INSERT INTO products (name, description, price, image_url)
+SELECT 'กระต่ายชมพู', 'กระต่ายหูยาวสีชมพูพาสเทล', 429.00, '' WHERE (SELECT COUNT(*) FROM products) = 1;

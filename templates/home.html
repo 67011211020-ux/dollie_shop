@@ -1,0 +1,25 @@
+{{define "home.html"}}
+{{template "header" .}}
+<div class="dollie-home">
+  <section class="home-hero" aria-labelledby="home-welcome">
+    <div class="home-hero-copy">
+      <span class="home-eyebrow">✦ SOFT & SWEET PLUSHIES ✦</span>
+      <h1 id="home-welcome">เติมความน่ารัก<br><em>ให้ทุกวันของคุณ</em> 🧸</h1>
+      <p>ยินดีต้อนรับสู่ Dollie Shop ร้านตุ๊กตานุ่มฟูที่พร้อมส่งต่อรอยยิ้มและความอบอุ่นให้คุณ 💗</p>
+      <div class="home-hero-actions"><a class="btn home-primary" href="#shop-categories">เลือกหมวดหมู่ตุ๊กตา</a><a class="home-secondary" href="#all-plushies">ดูสินค้าทั้งหมด</a></div>
+      <div class="home-hero-note">♡ นุ่มฟู น่ากอด · ♡ มีหลายแบบให้เลือก</div>
+    </div>
+    <div class="home-hero-art" aria-hidden="true"><div class="home-art-circle"></div><span class="home-art-sparkle home-sparkle-one">✦</span><span class="home-art-sparkle home-sparkle-two">♡</span><img src="/static/images/nong%20mee%20cream.jpg" alt="" loading="eager"><span class="home-art-sticker">made with ♡</span></div>
+  </section>
+
+  <section id="shop-categories" class="home-section" aria-labelledby="home-category-title">
+    <div class="home-section-heading"><div><span class="home-section-kicker">FIND YOUR FAVORITE</span><h2 id="home-category-title">🧸 เลือกประเภทตุ๊กตา</h2><p>เลือกเพื่อนตัวนุ่มที่ตรงใจ แล้วไปเจอน้อง ๆ กันเลย</p></div><a href="#all-plushies" class="home-view-all">ดูสินค้าทั้งหมด</a></div>
+    <div class="home-category-grid">{{range .Categories}}<a class="home-category-tile" href="/category?type={{.Slug}}"><span class="home-category-icon">{{if .ImageURL}}<img src="{{.ImageURL}}" alt="" loading="lazy">{{else}}{{.Emoji}}{{end}}</span><strong>{{.Name}}</strong><small>เลือกดูสินค้า</small></a>{{else}}<p>ยังไม่มีหมวดหมู่ตุ๊กตา</p>{{end}}</div>
+  </section>
+
+  <section class="home-feature-strip" aria-label="จุดเด่นของร้าน"><div><span>🎁</span><p><strong>คัดสรรด้วยความรัก</strong><small>ตุ๊กตาน่ารักสำหรับทุกโอกาส</small></p></div><div><span>🛍️</span><p><strong>เลือกซื้อได้ง่าย</strong><small>เลือกแบบ สี และขนาดที่ชอบ</small></p></div><div><span>📦</span><p><strong>ติดตามคำสั่งซื้อ</strong><small>เช็กสถานะได้ในบัญชีของคุณ</small></p></div></section>
+
+  <section id="all-plushies" class="home-section" aria-labelledby="home-products-title"><div class="home-section-heading"><div><span class="home-section-kicker">OUR CUDDLY COLLECTION</span><h2 id="home-products-title">💖 ตุ๊กตาน่ารักทั้งหมด</h2><p>เลือกน้องที่ถูกใจ แล้วกดดูรายละเอียด</p></div></div><div class="home-products-grid">{{range .Products}}<article class="home-product-card"><a class="home-product-image" href="/product?id={{.ID}}" aria-label="ดูสินค้า {{.Name}}">{{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Name}}" loading="lazy">{{else}}<span>🧸</span>{{end}}</a><div class="home-product-info"><span class="home-product-label">♡ DOLLIE PICK</span><h3><a href="/product?id={{.ID}}">{{.Name}}</a></h3><p>{{.Description}}</p><div class="home-product-bottom"><strong>฿{{printf "%.2f" .Price}}</strong><a class="btn" href="/product?id={{.ID}}">ดูรายละเอียด</a></div></div></article>{{else}}<p class="home-empty">ยังไม่มีสินค้าในร้านตอนนี้ 💗</p>{{end}}</div></section>
+</div>
+{{template "footer" .}}
+{{end}}

@@ -1,0 +1,10 @@
+{{define "admin_menu.html"}}{{template "header" .}}
+<div class="admin-hub"><h1>🧸 Dollie Shop — Admin</h1><p>จัดการร้านค้าในเมนูแยกแต่ละหน้า</p>
+<div class="admin-menu">
+<a href="/admin/dashboard">🏠 <span><b>ภาพรวมร้านค้า</b><small>สรุปข้อมูลสำคัญของร้าน</small></span>›</a>
+<a href="/admin/products">📦 <span><b>จัดการสินค้า</b><small>เพิ่ม แก้ไข ลบสินค้า และจัดการสต็อก</small></span>›</a>
+<a href="/admin/categories">📁 <span><b>จัดการหมวดหมู่</b><small>เพิ่ม แก้ไข และลบหมวดหมู่</small></span>›</a>
+<a href="/admin/messages">💬 <span><b>ข้อความจากลูกค้า</b><small>อ่านและตอบกลับข้อความลูกค้า</small></span>›</a>
+<a href="/admin/orders">📋 <span><b>จัดการออเดอร์</b><small>ตรวจสอบรายการสั่งซื้อและอัปเดตสถานะออเดอร์</small></span>›</a>
+<a href="/admin/payments">💳 <span><b>การชำระเงิน</b><small>ตรวจสอบสลิปและยืนยันการชำระเงิน</small></span>›</a>
+</div></div>{{template "footer" .}}{{end}}

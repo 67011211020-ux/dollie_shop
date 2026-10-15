@@ -1,0 +1,15 @@
+{{define "cart.html"}}{{template "header" .}}
+<div class="shop-layout"><div class="shop-heading"><h1>🛒 ตะกร้าสินค้า ({{len .CartItems}})</h1><a href="/">เลือกตุ๊กตาเพิ่ม →</a></div>
+{{if .CartItems}}
+<form method="get" action="/checkout" id="choose-form"></form>
+<div class="shop-panel"><div class="shop-store">♡ Dollie Shop <span>เลือกสินค้าที่ต้องการสั่งซื้อ</span></div>
+{{range .CartItems}}
+<div class="shop-item">
+<label class="shop-check"><input type="checkbox" name="selected_ids" value="{{.ID}}" class="cart-select" data-subtotal="{{.SubtotalCents}}" form="choose-form" aria-label="เลือก {{.Name}}"></label>
+<div class="shop-thumb">{{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Name}}">{{else}}🧸{{end}}</div>
+<div class="shop-item-info"><strong>{{.Name}}</strong>{{if or .Color .Size}}<span>สี: {{.Color}} · ขนาด: {{.Size}}</span>{{end}}<span>ราคาต่อชิ้น ฿{{money .PriceCents}}</span><strong class="pink">฿{{money .SubtotalCents}}</strong>
+<div class="cart-qty-line"><form method="post" action="/cart/update" class="cart-qty-form"><input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><label class="cart-qty-label">จำนวน <input type="number" name="quantity" min="0" max="99" value="{{.Quantity}}" required aria-label="จำนวน {{.Name}}"></label><button type="submit" class="btn cart-qty-save">บันทึกจำนวน</button></form><form method="post" action="/cart/update" class="cart-remove-form"><input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><input type="hidden" name="quantity" value="0"><button type="submit" class="cart-remove">ลบสินค้า</button></form></div>
+</div></div>{{end}}</div>
+<div class="shop-bottom"><label class="shop-all"><input type="checkbox" id="select-all"> ทั้งหมด</label><div class="shop-total"><span>ยอดรวม (<b id="selected-count">0</b> รายการ)</span><strong id="selected-total">฿0.00</strong></div><button type="submit" form="choose-form" class="btn" id="checkout-button" disabled>สั่งซื้อ (0)</button></div>
+<script src="/static/cart.js" defer></script>
+{{else}}<div class="shop-panel shop-empty">ยังไม่มีสินค้าในตะกร้า <a href="/">เลือกซื้อตุ๊กตา ♡</a></div>{{end}}</div>{{template "footer" .}}{{end}}

@@ -1,0 +1,85 @@
+{{define "orders.html"}}
+{{template "header" .}}
+<div class="my-orders">
+  <div class="my-orders-heading">
+    <h1>📦 คำสั่งซื้อของฉัน</h1>
+    <p>ติดตามสถานะและดูรายละเอียดสินค้าที่สั่งซื้อ</p>
+  </div>
+
+  {{range .Orders}}
+  <article class="my-order-card">
+    <div class="my-order-top">
+      <div>
+        <h2>คำสั่งซื้อ #{{.ID}}</h2>
+        <p class="my-order-date">{{.CreatedAt}}</p>
+      </div>
+      <span class="my-order-status {{if eq .Status "pending"}}status-pending{{else if eq .Status "confirmed"}}status-confirmed{{else if eq .Status "completed"}}status-completed{{else if eq .Status "cancelled"}}status-cancelled{{else}}status-other{{end}}">
+        {{if eq .Status "pending"}}◷ รอดำเนินการ{{else if eq .Status "confirmed"}}✓ ยืนยันแล้ว{{else if eq .Status "completed"}}✓ เสร็จสิ้น{{else if eq .Status "cancelled"}}✕ ยกเลิกแล้ว{{else}}{{.Status}}{{end}}
+      </span>
+    </div>
+
+    <div class="my-order-items">
+      {{range .Items}}
+      <div class="my-order-item">
+        <div class="my-order-image">
+          {{if .ImageURL}}<img src="{{.ImageURL}}" alt="{{.Name}}" loading="lazy">{{else}}🧸{{end}}
+        </div>
+        <div class="my-order-item-info">
+          <strong>{{.Name}}</strong>{{if or .Color .Size}}<span>สี: {{.Color}} · ขนาด: {{.Size}}</span>{{end}}
+          <span>จำนวน {{.Quantity}} ชิ้น</span>
+          <b>฿{{money .SubtotalCents}}</b>
+          {{if .CanReview}}<a class="btn my-order-review-btn" href="/product?id={{.ProductID}}#reviews">⭐ รีวิวสินค้า</a>{{end}}
+        </div>
+      </div>
+      {{end}}
+    </div>
+
+    {{if .ShippingAddress}}
+    <section class="my-order-shipping" aria-label="ที่อยู่จัดส่ง">
+      <h3>⌾ &nbsp;ที่อยู่จัดส่ง</h3>
+      <p><strong>ผู้รับ:</strong> {{.ReceiverName}}</p>
+      <p><strong>ที่อยู่:</strong> {{.ShippingAddress}}</p>
+      <p><strong>โทรศัพท์:</strong> {{.ReceiverPhone}}</p>
+      {{if .OrderNote}}<p><strong>หมายเหตุ:</strong> {{.OrderNote}}</p>{{end}}
+    </section>
+    {{else}}
+    <p class="my-order-no-address">คำสั่งซื้อเก่า: ไม่มีข้อมูลที่อยู่จัดส่ง</p>
+    {{end}}
+
+    <div class="payment-summary customer-payment-summary">
+      <div class="customer-payment-title"><strong>💳 การชำระเงิน</strong><span>
+      {{if eq .PaymentMethod "promptpay"}}พร้อมเพย์{{else if eq .PaymentMethod "mobile_banking"}}โมบายแบงกิ้ง{{else if eq .PaymentMethod "cod"}}เก็บเงินปลายทาง{{else}}ไม่ระบุ{{end}}</span></div>
+      {{if eq .PaymentMethod "cod"}}
+        <p class="payment-feedback">{{if eq .PaymentStatus "verified"}}✅ ชำระเงินปลายทางเรียบร้อยแล้ว{{else}}🚚 เลือกชำระเงินปลายทางแล้ว — ชำระเมื่อได้รับสินค้า{{end}}</p>
+      {{else if eq .PaymentStatus "submitted"}}
+        <p class="payment-feedback">✅ ส่งสลิปเรียบร้อยแล้ว กำลังรอร้านตรวจสอบการชำระเงิน</p>
+        <a href="/payment/receipt/view?order_id={{.ID}}" target="_blank" rel="noopener">🧾 ดูสลิปที่ส่งแล้ว</a>
+      {{else if eq .PaymentStatus "verified"}}
+        <p class="payment-feedback">✅ ร้านตรวจสอบและยืนยันการชำระเงินแล้ว</p>
+        <a href="/payment/receipt/view?order_id={{.ID}}" target="_blank" rel="noopener">🧾 ดูสลิปที่ส่งแล้ว</a>
+      {{else if eq .Status "cancelled"}}
+        <p class="payment-feedback">❌ คำสั่งซื้อนี้ยกเลิกแล้ว</p>
+      {{else}}
+        {{if eq .PaymentStatus "rejected"}}<p class="payment-feedback">⚠️ สลิปไม่ผ่านการตรวจสอบ กรุณาตรวจสอบยอดโอนและส่งสลิปใหม่ หรือติดต่อร้าน</p>{{else}}<p class="payment-feedback">⏳ ยังไม่ได้ส่งสลิป กรุณาชำระเงินและแนบหลักฐาน</p>{{end}}
+        <p>กรุณาตรวจสอบข้อมูลรับโอนของร้านก่อนโอนเงิน แล้วแนบหลักฐานการชำระเงิน</p>
+        {{if $.PromptPayQR}}<img class="payment-qr" src="{{$.PromptPayQR}}" alt="QR พร้อมเพย์ของร้าน">{{end}}
+        {{if $.PaymentAccount}}<p>บัญชีรับเงิน: {{$.PaymentAccount}}</p>{{else}}<p>ร้านยังไม่ได้ตั้งค่าข้อมูลรับโอน กรุณาติดต่อร้านก่อนโอนเงิน</p>{{end}}
+        <form method="post" action="/payment/receipt" enctype="multipart/form-data">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}">
+          <input type="hidden" name="order_id" value="{{.ID}}">
+          <label>แนบสลิป JPG/PNG/WEBP ไม่เกิน 3 MB<input type="file" name="receipt" accept="image/jpeg,image/png,image/webp" required></label>
+          <button class="btn">ส่งสลิปให้ร้านตรวจสอบ</button>
+        </form>
+      {{end}}
+    </div>
+    <div class="my-order-total">
+      <strong>ยอดรวมทั้งหมด</strong>
+      <strong>฿{{money .TotalCents}}</strong>
+    </div>
+  </article>
+  {{else}}
+  <div class="my-orders-empty">🧸 ยังไม่มีคำสั่งซื้อ</div>
+  {{end}}
+</div>
+{{template "footer" .}}
+{{end}}
