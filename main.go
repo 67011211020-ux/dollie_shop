@@ -219,7 +219,10 @@ func main() {
 
 	mux.Handle(
 		"/static/",
-		http.StripPrefix("/static/", http.FileServer(http.Dir("static"))),
+		http.StripPrefix("/static/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+			http.FileServer(http.Dir("static")).ServeHTTP(w, r)
+		})),
 	)
 
 	port := os.Getenv("PORT")
@@ -410,6 +413,8 @@ func redirect(w http.ResponseWriter, r *http.Request, path string) {
 }
 
 func (a *App) home(w http.ResponseWriter, r *http.Request) {
+	started := time.Now()
+	defer func() { log.Printf("home request completed in %s", time.Since(started)) }()
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
@@ -426,6 +431,7 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 		 ORDER BY id DESC`,
 	)
 	if e != nil {
+		log.Printf("home products query error: %v", e)
 		http.Error(w, "database error", 500)
 		return
 	}
@@ -439,7 +445,7 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var x Product
 
-		if rows.Scan(
+		if scanErr := rows.Scan(
 			&x.ID,
 			&x.Name,
 			&x.Description,
@@ -447,7 +453,8 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 			&x.ImageURL,
 			&x.CategoryID,
 			&x.Stock,
-		) != nil {
+		); scanErr != nil {
+			log.Printf("home products scan error: %v", scanErr)
 			http.Error(w, "database error", 500)
 			return
 		}
@@ -455,7 +462,8 @@ func (a *App) home(w http.ResponseWriter, r *http.Request) {
 		p.Products = append(p.Products, x)
 	}
 
-	if rows.Err() != nil {
+	if rowErr := rows.Err(); rowErr != nil {
+		log.Printf("home products rows error: %v", rowErr)
 		http.Error(w, "database error", 500)
 		return
 	}
